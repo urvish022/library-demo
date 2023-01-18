@@ -130,14 +130,10 @@
         const edit_data = '{!! $bookData !!}';
 
         var datas = JSON.parse(edit_data);
-        var lib_ids = [];
-        datas['book_library'].forEach(function(val,key){
-            lib_ids.push(val['library_id']);
-        })
 
-        $('#library-id option').filter(function() {
-            return lib_ids.indexOf($(this).val());
-        }).prop('selected', true);
+        // $('#library-id option').each(function() {
+        //     return lib_ids.indexOf($(this).val());
+        // }).prop('selected', true);
 
         $('.select2').select2({
             theme: "classic",
@@ -145,8 +141,6 @@
         });
         $(document).ready(function() {
             commonAjax({}, fetch_author_libraries_url, "GET", initialDataSuccess, initialDataError);
-            $("#author-id").val(author_id).change();
-            // $("#library-id")
         });
 
         $('#book-form').submit(function(e) {
@@ -206,6 +200,12 @@
                         .attr("value", value.id)
                         .text(value.library_name));
                 });
+
+                var lib_ids = [];
+                datas['book_library'].forEach(function(val,key){
+                    $('#library-id option[value=' + val['library_id'] + ']').attr('selected', true);
+                    lib_ids.push(val['library_id']);
+                })
             }
         }
 
