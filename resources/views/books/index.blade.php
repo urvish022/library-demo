@@ -55,8 +55,23 @@
                 count += 1;
                 var delete_btn = "<a href='#' onclick=deleteDialog("+value.id+")><i class='fa fa-trash'></i></a>";
                 var edit_btn = "<a onclick=edit("+value.id+") href='#'><i class='fa fa-pencil'></i></a>";
-                var library_name = value.book_library.length > 0 ? value.book_library[0].library.library_name : " - ";
-                var library_address = value.book_library.length > 0 ? value.book_library[0].library.library_address : " - ";
+                var libraries = [];
+                var libraries_address = [];
+                var library_name = "";
+                var library_address = "";
+                if(value.book_library.length > 0){
+                    for(var i=0;i<value.book_library.length;i++){
+                        libraries.push(value.book_library[i].library.library_name);
+                        libraries_address.push(value.book_library[i].library.library_address);
+                    }
+
+                    library_name = libraries.toString();
+                    library_address = libraries_address.toString();
+                } else {
+                    library_name = "-";
+                    library_address = "-";
+                }
+
                 $("#book-table").find('tbody')
                 .append($('<tr>')
                 .append($('<td>')
