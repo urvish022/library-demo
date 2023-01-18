@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\{BooksAPIController,AuthorsAPIController,LibraryAPIController};
+use App\Http\Controllers\API\BooksAPIController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +19,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('fetch-authors-libraries',[BooksAPIController::class,'getAuthorsLibrariesData'])->name('book.fetch-authors-libraries');
 Route::resource('book',BooksAPIController::class);
-Route::resource('authors',AuthorsAPIController::class);
-Route::resource('library',LibraryAPIController::class);

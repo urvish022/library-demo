@@ -17,6 +17,24 @@
   <tbody>
   </tbody>
 </table>
+
+<div class="modal" tabindex="-1" role="dialog" id="delete-modal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete</h5>
+      </div>
+      <div class="modal-body">
+      <input type="hidden" id="book-id">
+          <p>
+    Are you sure?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="deleteBook()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -28,26 +46,32 @@
 
     function bookSuccessListResult(data)
     {
+        var edit_url = '{ url("books/edit/") }';
         if(data.status){
             const result = data.data;
             var count = 0;
+            $("#book-table").find('tbody').empty();
             $.each(result,function(key,value){
                 count += 1;
+                var delete_btn = "<a href='#' onclick=deleteDialog("+value.id+")><i class='fa fa-trash'></i></a>";
+                var edit_btn = "<a onclick=edit("+value.id+") href='#'><i class='fa fa-pencil'></i></a>";
+                var library_name = value.book_library.length > 0 ? value.book_library[0].library.library_name : " - ";
+                var library_address = value.book_library.length > 0 ? value.book_library[0].library.library_address : " - ";
                 $("#book-table").find('tbody')
                 .append($('<tr>')
-                    .append($('<td>')
+                .append($('<td>')
+                .append($('<span>'))
+                .text(count)
+                )
+                .append($('<td>')
                         .append($('<span>'))
-                            .text(count)
-                    )
-                    .append($('<td>')
+                        .text(value.book_name)
+                        )
+                        .append($('<td>')
                         .append($('<span>'))
-                            .text(value.book_name)
-                    )
-                    .append($('<td>')
-                        .append($('<span>'))
-                            .text(value.book_year)
-                    )
-                    .append($('<td>')
+                        .text(value.book_year)
+                        )
+                        .append($('<td>')
                         .append($('<span>'))
                             .text(value.author.name)
                     )
@@ -57,21 +81,50 @@
                     )
                     .append($('<td>')
                         .append($('<span>'))
-                            .text("-")
+                            .text(library_name)
                     )
                     .append($('<td>')
                         .append($('<span>'))
-                            .text("-")
+                            .text(library_address)
                     )
                     .append($('<td>')
-                        .append($('<a class="" href=""><i class="fa fa-pencil"></i></a>&nbsp;<a class="" href=""><i class="fa fa-trash"></i></a>&nbsp;'))
+                        .append($(edit_btn+'&nbsp;'+delete_btn))
                     )
                 );
             });
         }
     }
 
+    function deleteDialog(id) {
+
+        $("#book-id").val(id);
+        $('#delete-modal').modal('toggle');
+        $('#delete-modal').modal('show');
+  };
+
     function bookErrorListResult(data)
+    {
+        alert(data.message);
+    }
+
+    function edit(id)
+    {
+        window.location.href = '{!! url("books/edit") !!}' + "/" + id;
+    }
+    function deleteBook(){
+        const bookId = $("#book-id").val();
+        const url = "api/book/"+bookId;
+        commonAjax({},url,"DELETE",deleteBookSuccess,deleteBookError);
+    }
+
+    function deleteBookSuccess(data)
+    {
+        $('#delete-modal').modal('hide');
+        alert(data.message);
+        commonAjax({},fetch_books_url,"GET",bookSuccessListResult,bookErrorListResult);
+    }
+
+    function deleteBookError(data)
     {
         alert(data.message);
     }

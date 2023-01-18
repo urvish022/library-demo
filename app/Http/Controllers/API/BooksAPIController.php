@@ -3,17 +3,20 @@
 namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request;
-use App\Repository\BooksRepository;
+use App\Http\Requests\{UpdateBookRequest,CreateBookRequest};
+use App\Repository\{AuthorsRepository,BooksRepository,LibraryRepository};
 use App\Http\Resources\GeneralError;
 use App\Http\Resources\GeneralResponse;
 use App\Http\Controllers\Controller;
 
 class BooksAPIController extends Controller
 {
-    public $booksRepository;
-    public function __construct(BooksRepository $booksRepository)
+    public $booksRepository, $authorRepository, $libraryRepository;
+    public function __construct(BooksRepository $booksRepository, AuthorsRepository $authorRepository, LibraryRepository $libraryRepository)
     {
+        $this->authorRepository = $authorRepository;
         $this->booksRepository = $booksRepository;
+        $this->libraryRepository = $libraryRepository;
     }
 
     /**
@@ -39,16 +42,31 @@ class BooksAPIController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Store a newly created resource in storage.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function create(CreateBookRequest $bookRequest)
+    public function store(CreateBookRequest $request)
     {
         try {
-            $input = $bookRequest->all();
+            $inputs = $request->all();
+            if(is_null($inputs['author_id'])){
+                $name = $inputs['name'];
+                $genre = $inputs['genre'];
+                $birth_date = $inputs['birth_date'];
+                $authorData = $this->authorRepository->create(compact('name','genre','birth_date'));
+                $inputs['author_id'] = $authorData->id;
+            }
+            $book_data = $this->booksRepository->create($inputs);
+            if((!empty($inputs['library_id']) || !empty($inputs['library_name'])) && !empty($book_data)){
+                $book_id = $book_data->id;
+                $library_name = $inputs['library_name'];
+                $library_address = $inputs['library_address'];
+                $library_id = $inputs['library_id'];
+                $libraryData = $this->libraryRepository->create(compact('library_id','book_id','library_name','library_address'));
 
-            $data = $this->booksRepository->create();
+            }
             return new GeneralResponse([
                 'data' => [],
                 'message' => "Book saved successfully",
@@ -63,48 +81,42 @@ class BooksAPIController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateBookRequest $request, $id)
     {
-        //
+        try{
+            $inputs = $request->all();
+            $name = $inputs['name'];
+            $genre = $inputs['genre'];
+            $birth_date = $inputs['birth_date'];
+            $author_id = $this->authorRepository->createOrUpdate(compact('name','genre','birth_date'),$inputs['author_id']);
+
+            $book_name = $inputs['book_name'];
+            $book_year = $inputs['book_year'];
+            $this->booksRepository->update(compact('book_name','book_year','author_id'),['id'=>$id]);
+
+            if(!empty($inputs['library_name']) || $inputs['library_id']){
+                $library_name = $inputs['library_name'];
+                $library_address = $inputs['library_address'];
+                $book_id = $id;
+                $this->libraryRepository->createOrUpdate(compact('library_name','library_address','book_id'),$inputs['library_id']);
+            }
+            return new GeneralResponse([
+                'data' => [],
+                'message' => "Book updated successfully",
+            ]);
+        } catch (\exception $ex) {
+            return GeneralError::make([
+                'code' => 500,
+                'message' => 'Failed to update data.',
+                'error' => $ex->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -115,6 +127,28 @@ class BooksAPIController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try{
+            $result = $this->booksRepository->delete($id);
+            return new GeneralResponse([
+                'data' => [],
+                'message' => "Book deleted successfully",
+            ]);
+        } catch (\exception $ex) {
+            return GeneralError::make([
+                'code' => 500,
+                'message' => 'Failed to delete data.',
+                'error' => $ex->getMessage(),
+            ]);
+        }
+    }
+
+    public function getAuthorsLibrariesData()
+    {
+        $authors = $this->authorRepository->get();
+        $libraries = $this->libraryRepository->get();
+        return new GeneralResponse([
+            'data' => compact('authors','libraries'),
+            'message' => "",
+        ]);
     }
 }

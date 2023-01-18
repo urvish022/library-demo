@@ -13,7 +13,7 @@
 </div>
 @if(\Request::route()->getName() == 'books.index')
 <div class="float-right">
-    <a class="btn btn-primary ml-1" class="" href="{{route('books.create')}}">Add Book</a>
+    <a class="btn btn-primary ml-1" class="" href="{{route('books.create')}}"><i class="fa fa-plus"></i> Add Book</a>
 </div>
 @endif
 </nav>
