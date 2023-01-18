@@ -29,8 +29,8 @@ class CreateBookRequest extends FormRequest
             'birth_date' => 'required_if:author_type,==,new_author',
             'genre' => 'required_if:author_type,==,new_author',
             'library_id' => 'nullable',
-            'library_name' => 'nullable',
-            'library_address' => 'nullable'
+            'library_name' => 'nullable|array',
+            'library_address' => 'nullable|array'
         ];
     }
 }

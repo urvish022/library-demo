@@ -59,19 +59,17 @@ class BooksAPIController extends Controller
                 $inputs['author_id'] = $authorData->id;
             }
             $book_data = $this->booksRepository->create($inputs);
-            if((!empty($inputs['library_id']) || !empty($inputs['library_name'])) && !empty($book_data)){
+            if(!empty($book_data)){
                 $book_id = $book_data->id;
-                $library_name = $inputs['library_name'];
-                $library_address = $inputs['library_address'];
-                $library_id = $inputs['library_id'];
-                $libraryData = $this->libraryRepository->create(compact('library_id','book_id','library_name','library_address'));
-
+                $inputs['book_id'] = $book_id;
+                $this->libraryRepository->create($inputs);
             }
             return new GeneralResponse([
                 'data' => [],
                 'message' => "Book saved successfully",
             ]);
         } catch (\exception $ex) {
+            return $ex;
             return GeneralError::make([
                 'code' => 500,
                 'message' => 'Failed to save data.',
@@ -101,10 +99,7 @@ class BooksAPIController extends Controller
             $this->booksRepository->update(compact('book_name','book_year','author_id'),['id'=>$id]);
 
             if(!empty($inputs['library_name']) || $inputs['library_id']){
-                $library_name = $inputs['library_name'];
-                $library_address = $inputs['library_address'];
-                $book_id = $id;
-                $this->libraryRepository->createOrUpdate(compact('library_name','library_address','book_id'),$inputs['library_id']);
+                $this->libraryRepository->createOrUpdate($inputs,$id);
             }
             return new GeneralResponse([
                 'data' => [],

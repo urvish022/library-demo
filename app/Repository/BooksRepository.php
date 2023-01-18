@@ -31,7 +31,7 @@ class BooksRepository
     {
         return Books::with(['author',
         'book_library'=>function($q){
-            $q->latest()->limit(1);
+            $q->latest();
         },
         'book_library.library'])->find($id);
     }
